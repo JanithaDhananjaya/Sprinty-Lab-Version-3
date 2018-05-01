@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Sprinty Lab</title>
+
+    <link rel="shortcut icon" href="images/logo.png"/>
+    <script src="js/libraries/jquery-3.2.1.min.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/pdf.worker.js"></script>
+    <link rel="stylesheet" href="css/libraries/bootstrap.css">
+
+    <style type="text/css">
+
+        #upload-button {
+            width: 150px;
+            display: block;
+        }
+
+        #file-to-upload {
+            display: none;
+        }
+
+        #pdf-main-container {
+            width: 400px;
+            margin: 20px auto;
+        }
+
+        #pdf-loader {
+            display: none;
+            text-align: center;
+            color: #999999;
+            font-size: 13px;
+            line-height: 100px;
+            height: 100px;
+        }
+
+        #pdf-contents {
+            display: none;
+        }
+
+        #pdf-meta {
+            overflow: hidden;
+            margin: 0 0 20px 0;
+        }
+
+        #pdf-buttons {
+            float: left;
+        }
+
+        #page-count-container {
+            float: right;
+        }
+
+        #pdf-current-page {
+            display: inline;
+        }
+
+        #pdf-total-pages {
+            display: inline;
+        }
+
+        #output_image {
+            /*border: 1px solid black;*/
+            box-sizing: border-box;
+            margin: auto;
+        }
+
+        #page-loader {
+            height: 100px;
+            line-height: 100px;
+            text-align: center;
+            display: none;
+            color: #999999;
+            font-size: 13px;
+        }
+
+    </style>
+
+    <style type="text/css">
+
+        .form-line {
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+
+        .form-all {
+            margin: 0px auto;
+            padding-top: 0px;
+            width: 520px;
+            color: rgb(28, 28, 28) !important;
+            font-family: 'Roboto';
+            font-size: 14px;
+        }
+    </style>
+
+    <style type="text/css" id="form-designer-style">
+        /* Injected CSS Code */
+        .form-label.form-label-auto {
+
+            display: inline-block;
+            float: left;
+            text-align: left;
+
+        }
+
+        .form-line {
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        .form-all {
+            width: 520px;
+        }
+
+        .form-label-left,
+        .form-label-right {
+            width: 151px
+        }
+
+        .form-all {
+            font-size: 14px
+        }
+
+        .supernova .form-all, .form-all {
+            background-color: rgb(255, 255, 255);
+            border: 1px solid transparent;
+        }
+
+    </style>
+
+    <style id="fit_sizes">
+
+        /*fit sizes stylies*/
+
+        .center_div {
+            margin: auto;
+        }
+
+        /*portrait div*/
+        .portrait {
+            border: 2px solid black;
+            width: 285px;
+            height: 405px;
+            padding: 0;
+        }
+
+        /*landscape div*/
+        .landscape {
+            border: 2px solid black;
+            width: 400px;
+            height: 255px;
+        }
+
+        /*Fit sizes*/
+
+        .image_portrait {
+            position: relative;
+            width: 280px;
+            height: 400px;
+        }
+
+        .image_landscape {
+            position: relative;
+            width: 190px;
+            height: 250px;
+            margin-left: 55px
+        }
+
+        .fit_landscape {
+            margin-left: 25%;
+        }
+
+    </style>
+
+    <style id="colour_mode">
+        .greyScale {
+            filter: grayscale(100%);
+        }
+    </style>
+
+    <style id="actual_sizes">
+
+        .overflow {
+            overflow: hidden;
+        }
+
+        /*Actual Sizes*/
+        .A3_portrait {
+            width: 220px;
+            height: 300px;
+        }
+
+        .A4_portrait {
+            width: 280px;
+            height: 400px;
+
+        }
+
+        .A5_portrait {
+            width: 560px;
+            height: 640px;
+
+        }
+
+        .B4_portrait {
+            width: 240px;
+            height: 320px;
+        }
+
+        .B5_portrait {
+            width: 340px;
+            height: 480px;
+        }
+
+        .A3_landscape {
+            width: 190px;
+            height: 250px;
+            margin: 0;
+        }
+
+        .A4_landscape {
+            width: 270px;
+            height: 350px;
+        }
+
+        .A5_landscape {
+            width: 370px;
+            height: 400px;
+        }
+
+        .B4_landscape {
+            width: 230px;
+            height: 280px;
+        }
+
+        .B5_landscape {
+            width: 270px;
+            height: 350px;
+        }
+
+        .letter_portrait {
+            width: 260px;
+            height: 420px;
+        }
+
+        .letter_landscape {
+            width: 250px;
+            height: 330px;
+        }
+
+        .boder {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+    </style>
+
+</head>
+<body id="myPage" data-spy="scroll" data-target=".navbar" data-offset="60"
+      style="background-color: #fffee2;">
+<!-- --------------------------------------1------------------------------------------------- -->
+
+<div id="initial" class="form-all">
+    <ul class="form-section page-section" style="list-style-type:none">
+        <li class="form-input-wide" data-type="control_head">
+
+            <div class="form-header-group ">
+                <div class="header-text httal htvam">
+                    <center>
+                        <h2 id="header_18" class="form-header" data-component="header">
+                            <img src="images/logo.png" style="max-width: 100%; max-height: 100%;">
+                        </h2>
+                        <div id="subHeader_18" class="form-subHeader">
+                            “Printing services at your fingertips”
+                        </div>
+                        <br>
+                    </center>
+                </div>
+            </div>
+        </li>
+        <div class="main">
+
+            <li class="form-line" data-type="control_fileupload" id="id_22">
+                <label class="form-label form-label-left form-label-auto" id="uploadfile"> Upload the
+                    file
+                    <span class="form-required">
+                        *
+                        </span>
+                </label>
+
+                <div>
+                    <button id="upload-button">Select PDF</button>
+                    <input type="file" id="file-to-upload" onclick="change_options()" accept="application/pdf"/>
+                </div>
+
+            </li>
+            <li class="form-line jf-required" data-type="control_fullname">
+                <label class="form-label form-label-left form-label-auto">
+                    Number of copies
+                    <span class="form-required">
+                        *
+                        </span>
+                </label>
+                <div id="cid_16" class="form-input jf-required">
+                    <div data-wrapper-react="true">
+          <span class="form-sub-label-container" style="vertical-align:top;">
+            <input type="number" name="no_of_copies" placeholder="Number of copies..."
+                   class="form-control-plaintext"
+                   size="10" value="1" required="">
+          </span>
+                    </div>
+                </div>
+            </li>
+
+            <li class="form-line jf-required" data-type="control_radio">
+                <label class="form-label form-label-left form-label-auto">
+                    Black & White /Colour
+                    <span class="form-required">
+                        *
+                        </span>
+                </label>
+                <div class="form-input jfilef-required">
+                    <div class="form-multiple-column" data-columncount="3" data-component="radio">
+        <span class="form-radio-item">
+          <span class="dragger-item">
+          </span>
+            <input type="radio" id="greyScale" class="form-radio" name="gray_or_color" value="gray_scale" required="">
+          <label> Black & White </label>
+        </span>
+                        <span class="form-radio-item">
+          <span class="dragger-item">
+          </span>
+          <input type="radio" id="colored" class="form-radio" checked="" name="gray_or_color" value="color"
+                 required="">
+          <label> Colour </label>
+        </span>
+                    </div>
+                </div>
+            </li>
+        </div>
+
+
+        <div id="documents" class="tabcontent main">
+            <li class="form-line" data-type="control_dropdown">
+                <label class="form-label form-label-left form-label-auto"> Page Size
+                    <span class="form-required">
+        *
+      </span>
+                </label>
+                <div class="form-input jf-required">
+                    <select class="form-dropdown" id="page_sizes" name="paper_size" data-component="dropdown">
+                        <option value="Letter">Letter</option>
+                        <option value="A3">A3</option>
+                        <option selected="selected" value="A4">A4</option>
+                        <option value="A5">A5</option>
+                        <option value="B4">B4</option>
+                        <option value="B5">B5</option>
+                    </select>
+                </div>
+            </li>
+
+            <li class="form-line" data-type="control_dropdown" id="landscape_or_portrait_div">
+                <label class="form-label form-label-left form-label-auto" id="label_23"> Orientation
+                    <span class="form-required">
+            *
+          </span>
+                </label>
+                <div class="form-input jf-required">
+                    <select class="form-dropdown documents_required" id="orientation"
+                            name="landscape_or_portrait"
+                            data-component="dropdown">
+                        <option value="">Chose an option</option>
+
+                        <option value="landscape">Landscape</option>
+
+                        <option selected="selected" value="portrait">Portrait</option>
+                    </select>
+                </div>
+            </li>
+
+            <li class="form-line jf-required" data-type="control_textbox" id="pages_per_sheet_div">
+                <label class="form-label form-label-left form-label-auto">
+                    Pages per sheet with orientation
+                    <span class="form-required">
+            *
+          </span>
+
+                </label> <br> <br>
+                <div id="pages_per_sheet_ppt_landscape_div" class="form-input jf-required">
+                    <div class="form-multiple-column" data-columncount="3" data-component="radio"
+                         style="width:300px">
+            <span class="form-radio-item ">
+              <span class="dragger-item">
+              </span>
+                <input type="radio" class="form-radio documents_required" id="pages_per_sheet_pl1"
+                       name="pages_per_sheet"
+                       checked="checked" value="1_per_page_pl">
+                <label id="label_pages_per_sheet_pl1" for="pages_per_sheet_pl1"> 1 per page </label>
+
+            </span>
+                    </div>
+                    <div class="form-multiple-column" data-columncount="3" data-component="radio"
+                         style="width:300px">
+                            <span class="form-radio-item ">
+              <span class="dragger-item">
+              </span>
+                <input type="radio" class="form-radio documents_required" id="pages_per_sheet_pl2"
+                       name="pages_per_sheet"
+                       value="2_per_page_pl">
+                <label id="label_pages_per_sheet_pl2" for="pages_per_sheet_pl2"> 2 per page </label>
+
+            </span>
+                    </div>
+                    <div class="form-multiple-column" data-columncount="3" data-component="radio">
+                            <span class="form-radio-item ">
+              <span class="dragger-item">
+              </span>
+                <input type="radio" class="form-radio documents_required" id="pages_per_sheet_pl4"
+                       name="pages_per_sheet"
+                       value="4_per_page_pl">
+                <label id="label_pages_per_sheet_pl4" for="pages_per_sheet_pl4"> 4 per page </label>
+            </span>
+                    </div>
+                    <div class="form-multiple-column" data-columncount="3" data-component="radio">
+                            <span class="form-radio-item ">
+              <span class="dragger-item">
+              </span>
+                <input type="radio" class="form-radio documents_required" id="pages_per_sheet_pl6"
+                       name="pages_per_sheet"
+                       value="6_per_page_pl">
+                <label id="label_pages_per_sheet_pl6" for="pages_per_sheet_pl6"> 6 per page </label>
+            </span>
+                    </div>
+                    <div class="form-multiple-column" data-columncount="3" data-component="radio">
+                            <span class="form-radio-item ">
+              <span class="dragger-item">
+              </span>
+                <input type="radio" class="form-radio documents_required" id="pages_per_sheet_pl9"
+                       name="pages_per_sheet"
+                       value="9_per_page_pl">
+                <label id="label_pages_per_sheet_pl9" for="pages_per_sheet_pl9"> 9 per page </label>
+            </span>
+
+                    </div>
+                </div>
+
+                <div id="pages_per_sheet_ppt_portrait_div" class="form-input jf-required">
+                    <div class="form-multiple-column" data-columncount="3" data-component="radio"
+                         style="width:300px">
+                            <span class="form-radio-item ">
+              <span class="dragger-item">
+              </span>
+                            </span>
+                    </div>
+                </div>
+
+            </li>
+        </div>
+
+
+        <li class="form-line jf-required" data-type="control_radio">
+            <label class="form-label form-label-left form-label-auto">
+                Page Handling
+                <span class="form-required">
+                        *
+                        </span>
+            </label>
+            <div class="form-input jf-required">
+                <div class="form-multiple-column" data-columncount="3" data-component="radio">
+        <span class="form-radio-item">
+          <span class="dragger-item">
+          </span>
+            <input type="radio" class="form-radio" id="fit" checked="" name="page_handing" value="fit" required="">
+          <label>Fit </label>
+        </span>
+                    <span class="form-radio-item">
+          <span class="dragger-item">
+          </span>
+          <input type="radio" id="actualSize" class="form-radio" name="page_handing" value="actualSize"
+                 required="">
+          <label> Actual Size </label>
+        </span>
+                </div>
+            </div>
+        </li>
+
+        <div id="pdf-main-container">
+            <div id="pdf-loader">Loading document ...</div>
+            <div id="pdf-contents">
+                <div id="pdf-meta">
+                    <div id="pdf-buttons">
+                        <button id="pdf-prev"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i></button>
+                        <button id="pdf-next"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
+                    </div>
+                    <div id="page-count-container">Page
+                        <div id="pdf-current-page"></div>
+                        of
+                        <div id="pdf-total-pages"></div>
+                    </div>
+                </div>
+
+                <div id="preview_div" style="margin: auto">
+
+                    <canvas id="output_image" style="background-color: yellow"></canvas>
+
+                    <canvas id="canvas_1" style="background-color: white"></canvas>
+                    <canvas id="canvas_2" style="background-color: white"></canvas>
+
+                    <canvas id="canvas_3" style="background-color: white"></canvas>
+                    <canvas id="canvas_4" style="background-color: white"></canvas>
+
+                    <canvas id="canvas_5" style="background-color: white"></canvas>
+                    <canvas id="canvas_6" style="background-color: white"></canvas>
+
+                    <canvas id="canvas_7" style="background-color: white"></canvas>
+                    <canvas id="canvas_8" style="background-color: white"></canvas>
+                    <canvas id="canvas_9" style="background-color: white"></canvas>
+
+                </div>
+
+                <div id="page-loader">Loading page ...</div>
+            </div>
+        </div>
+
+        <br>
+
+    </ul>
+</div>
+</body>
+<script>
+
+    var fileUpload = true;
+
+    var reader = new FileReader();
+
+    function preview_image(event) {
+
+        reader.onload = function () {
+            var output = document.getElementById("preview_div");
+            output.src = reader.result;
+
+            var height = output.clientHeight;
+            var width = output.clientWidth;
+
+            console.log(height);
+            console.log(width);
+
+        }
+        fileUpload = true;
+        reader.readAsDataURL(event.target.files[0]);
+
+    }
+
+</script>
+<script>
+
+
+    var uploadFile = false;
+
+    $('#orientation').change(function () {
+        change_options();
+    });
+
+    $('#page_sizes').change(function () {
+        change_options();
+    });
+
+    $('input[name=page_handing]').change(function () {
+        change_options();
+    });
+
+
+    $('input[name=pages_per_sheet]').change(function () {
+        changePagePerSheet();
+    });
+
+    //This use for set default options for preview area
+    function set_default_options() {
+        $('#pages_per_sheet_pl1').prop("checked", true);
+    }
+
+    //This function is the main function for change options
+
+    function change_options() {
+        if (uploadFile) {
+            set_default_options();
+        }
+        changePagePerSheet();
+        uploadFile = true;
+
+
+        // page preview for fit portrait size for all paper sizes
+
+        if ($('#orientation').val() === 'portrait' && $('input[name=page_handing]:checked').val() === 'fit') {
+            $('#preview_div').addClass("portrait");
+            $('#output_image').addClass("image_portrait");
+
+            $('#preview_div').removeClass("landscape");
+            $('#preview_div').removeClass("overflow");
+
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+
+        }
+
+        // page preview for fit landscape size for all paper sizes
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'fit') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("image_landscape");
+
+            $('#preview_div').removeClass("portrait");
+            $('#preview_div').removeClass("overflow");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize portrait A3 paper
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'A3') {
+            $('#preview_div').addClass("portrait");
+            $('#output_image').addClass("A3_portrait");
+
+            $('#preview_div').removeClass("landscape");
+            $('#preview_div').removeClass("overflow");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize landscape A3 paper
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'A3') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("A3_landscape");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("portrait");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize portrait A4 paper
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'A4') {
+            $('#preview_div').addClass("portrait");
+            $('#output_image').addClass("A4_portrait");
+
+            $('#preview_div').removeClass("landscape");
+            $('#preview_div').removeClass("overflow");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize landscape A4 paper
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'A4') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("A4_landscape");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("portrait");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize portrait A5 paper
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'A5') {
+            $('#preview_div').addClass("portrait");
+            $('#output_image').addClass("A5_portrait");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("landscape");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize landscape A5 paper
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'A5') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("A5_landscape");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("portrait");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+
+        }
+
+        // page preview for actualsize portrait B4 paper
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'B4') {
+            $('#preview_div').addClass("portrait");
+            $('#output_image').addClass("B4_portrait");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("landscape");
+
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize landscape B4 paper
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'B4') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("B4_landscape");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("portrait");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize portrait B5 paper
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'B5') {
+            $('#preview_div').addClass("portrait");
+            $('#output_image').addClass("B5_portrait");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("landscape");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize landscape B5 paper
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'B5') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("B5_landscape");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("portrait");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B5_portrait");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize portrait  letter
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'Letter') {
+            $('#preview_div').addClass("portrait");
+            $('#output_image').addClass("letter_portrait");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("landscape");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("letter_landscape");
+
+        }
+
+        // page preview for actualsize landscape letter
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'actualSize' && $('#page_sizes').val() === 'Letter') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("letter_landscape");
+            $('#preview_div').addClass("overflow");
+
+            $('#preview_div').removeClass("portrait");
+
+            $('#output_image').removeClass("image_portrait");
+            $('#output_image').removeClass("image_landscape");
+            $('#output_image').removeClass("A3_portrait");
+            $('#output_image').removeClass("A3_landscape");
+            $('#output_image').removeClass("A4_portrait");
+            $('#output_image').removeClass("A4_landscape");
+            $('#output_image').removeClass("A5_portrait");
+            $('#output_image').removeClass("B4_portrait");
+            $('#output_image').removeClass("B4_landscape");
+            $('#output_image').removeClass("A5_landscape");
+            $('#output_image').removeClass("B5_landscape");
+            $('#output_image').removeClass("letter_portrait");
+            $('#output_image').removeClass("B5_portrait");
+        }
+    }
+
+</script>
+<script>
+    $('#greyScale').click(function () {
+        $('#output_image').addClass("greyScale");
+        $('#canvas_1').addClass("greyScale");
+        $('#canvas_2').addClass("greyScale");
+        $('#canvas_3').addClass("greyScale");
+        $('#canvas_4').addClass("greyScale");
+        $('#canvas_5').addClass("greyScale");
+        $('#canvas_6').addClass("greyScale");
+        $('#canvas_7').addClass("greyScale");
+        $('#canvas_8').addClass("greyScale");
+        $('#canvas_9').addClass("greyScale");
+    });
+
+    $('#colored').click(function () {
+        $('#output_image').removeClass("greyScale");
+        $('#canvas_1').removeClass("greyScale");
+        $('#canvas_2').removeClass("greyScale");
+        $('#canvas_3').removeClass("greyScale");
+        $('#canvas_4').removeClass("greyScale");
+        $('#canvas_5').removeClass("greyScale");
+        $('#canvas_6').removeClass("greyScale");
+        $('#canvas_7').removeClass("greyScale");
+        $('#canvas_8').removeClass("greyScale");
+        $('#canvas_9').removeClass("greyScale");
+    });
+
+</script>
+
+<script>
+
+    var __PDF_DOC,
+        __CURRENT_PAGE,
+        __TOTAL_PAGES,
+        __PAGE_RENDERING_IN_PROGRESS = 0,
+
+        __OUTPUT_IMAGE = $('#output_image').get(0),
+
+        __CANVAS_1 = $('#canvas_1').get(0),
+        __CANVAS_2 = $('#canvas_2').get(0),
+        __CANVAS_3 = $('#canvas_3').get(0),
+        __CANVAS_4 = $('#canvas_4').get(0),
+
+        __CANVAS_5 = $('#canvas_5').get(0),
+        __CANVAS_6 = $('#canvas_6').get(0),
+        __CANVAS_7 = $('#canvas_7').get(0),
+        __CANVAS_8 = $('#canvas_8').get(0),
+        __CANVAS_9 = $('#canvas_9').get(0),
+
+
+        button = $('#pdf-buttons'),
+        page_no = $('#page-count-container');
+
+
+    function showPDF(pdf_url) {
+        $("#pdf-loader").show();
+
+        PDFJS.getDocument({url: pdf_url}).then(function (pdf_doc) {
+            __PDF_DOC = pdf_doc;
+            __TOTAL_PAGES = __PDF_DOC.numPages;
+
+            // Hide the pdf loader and show pdf container in HTML
+            $("#pdf-loader").hide();
+            $("#pdf-contents").show();
+            $("#pdf-total-pages").text(__TOTAL_PAGES);
+
+            // Show the first page
+            showPage(1);
+        }).catch(function (error) {
+            // If error re-show the upload button
+            $("#pdf-loader").hide();
+            $("#upload-button").show();
+
+            alert(error.message);
+        });
+
+    }
+
+    function showPage(page_no) {
+
+        __PAGE_RENDERING_IN_PROGRESS = 1;
+        __CURRENT_PAGE = page_no;
+
+        // Disable Prev & Next buttons while page is being loaded
+        $("#pdf-next, #pdf-prev").attr('disabled', 'disabled');
+
+        // While page is being rendered hide the canvas and show a loading message
+        $("#output_image").hide();
+        $("#page-loader").show();
+
+        // Update current page in HTML
+        $("#pdf-current-page").text(page_no);
+
+        // Fetch the page
+        __PDF_DOC.getPage(page_no).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_1 = __OUTPUT_IMAGE.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+            var viewport_1 = page.getViewport(scale_required_1);
+
+            // Set canvas height
+            __OUTPUT_IMAGE.height = viewport_1.height;
+
+            __CANVAS_CTX_1 = __OUTPUT_IMAGE.getContext('2d');
+
+            var renderContext_1 = {
+                canvasContext: __CANVAS_CTX_1,
+                viewport: viewport_1
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_1).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+    }
+
+
+    function showFour_Page(page_1, page_2, page_3, page_4, Canvas_1, Canvas_2, Canvas_3, Canvas_4) {
+        console.log("print four pages");
+
+        __PAGE_RENDERING_IN_PROGRESS = 1;
+        __PAGE_1 = page_1;
+        __PAGE_2 = page_2;
+        __PAGE_3 = page_3;
+        __PAGE_4 = page_4;
+
+        __CURRENT_PAGE = page_1;
+
+        // Disable Prev & Next buttons while page is being loaded
+        $("#pdf-next, #pdf-prev").attr('disabled', 'disabled');
+
+        // While page is being rendered hide the canvas and show a loading message
+        $("#output_image").hide();
+        $("#page-loader").show();
+
+        // Update current page in HTML
+        $("#pdf-current-page").text(page_1);
+
+
+        // Fetch the pagebuttons
+        __PDF_DOC.getPage(page_1).then(function (page1) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_1 = Canvas_1.width / page1.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_1 = page1.getViewport(scale_required_1);
+
+
+            // Set canvas height
+            Canvas_1.height = viewport_1.height;
+
+            __CANVAS_CTX_1 = Canvas_1.getContext('2d');
+
+            var renderContext_1 = {
+                canvasContext: __CANVAS_CTX_1,
+                viewport: viewport_1
+            };
+
+            // Render the page contents in the canvas
+
+            page1.render(renderContext_1).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+
+        __PDF_DOC.getPage(page_2).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_2 = Canvas_2.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_2 = page.getViewport(scale_required_2);
+
+
+            // Set canvas height
+            Canvas_2.height = viewport_2.height;
+
+            __CANVAS_CTX_2 = Canvas_2.getContext('2d');
+
+            var renderContext_2 = {
+                canvasContext: __CANVAS_CTX_2,
+                viewport: viewport_2
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_2).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+
+        });
+
+        __PDF_DOC.getPage(page_3).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_3 = Canvas_3.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_3 = page.getViewport(scale_required_3);
+
+
+            // Set canvas height
+            Canvas_3.height = viewport_3.height;
+
+            __CANVAS_CTX_3 = Canvas_3.getContext('2d');
+
+            var renderContext_3 = {
+                canvasContext: __CANVAS_CTX_3,
+                viewport: viewport_3
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_3).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+        __PDF_DOC.getPage(page_4).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_4 = Canvas_4.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_4 = page.getViewport(scale_required_4);
+
+
+            // Set canvas height
+            Canvas_4.height = viewport_4.height;
+
+            __CANVAS_CTX_4 = Canvas_4.getContext('2d');
+
+            var renderContext_4 = {
+                canvasContext: __CANVAS_CTX_4,
+                viewport: viewport_4
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_4).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+    }
+
+
+    function showSix_Page(page_1, page_2, page_3, page_4, page_5, page_6, Canvas_1, Canvas_2, Canvas_3, Canvas_4, Canvas_5, Canvas_6) {
+        console.log("print six pages");
+
+        __PAGE_RENDERING_IN_PROGRESS = 1;
+        __PAGE_1 = page_1;
+        __PAGE_2 = page_2;
+        __PAGE_3 = page_3;
+        __PAGE_4 = page_4;
+        __PAGE_5 = page_5;
+        __PAGE_6 = page_6;
+
+        __CURRENT_PAGE = page_1;
+
+        // Disable Prev & Next buttons while page is being loaded
+        $("#pdf-next, #pdf-prev").attr('disabled', 'disabled');
+
+        // While page is being rendered hide the canvas and show a loading message
+        $("#output_image").hide();
+        $("#page-loader").show();
+
+        // Update current page in HTML
+        $("#pdf-current-page").text(page_1);
+
+
+        // Fetch the page
+        __PDF_DOC.getPage(page_1).then(function (page1) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_1 = Canvas_1.width / page1.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_1 = page1.getViewport(scale_required_1);
+
+
+            // Set canvas height
+            Canvas_1.height = viewport_1.height;
+
+            __CANVAS_CTX_1 = Canvas_1.getContext('2d');
+
+            var renderContext_1 = {
+                canvasContext: __CANVAS_CTX_1,
+                viewport: viewport_1
+            };
+
+            // Render the page contents in the canvas
+
+            page1.render(renderContext_1).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+
+        __PDF_DOC.getPage(page_2).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_2 = Canvas_2.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_2 = page.getViewport(scale_required_2);
+
+
+            // Set canvas height
+            Canvas_2.height = viewport_2.height;
+
+            __CANVAS_CTX_2 = Canvas_2.getContext('2d');
+
+            var renderContext_2 = {
+                canvasContext: __CANVAS_CTX_2,
+                viewport: viewport_2
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_2).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+
+        });
+
+        __PDF_DOC.getPage(page_3).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_3 = Canvas_3.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_3 = page.getViewport(scale_required_3);
+
+
+            // Set canvas height
+            Canvas_3.height = viewport_3.height;
+
+            __CANVAS_CTX_3 = Canvas_3.getContext('2d');
+
+            var renderContext_3 = {
+                canvasContext: __CANVAS_CTX_3,
+                viewport: viewport_3
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_3).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+        __PDF_DOC.getPage(page_4).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_4 = Canvas_4.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_4 = page.getViewport(scale_required_4);
+
+
+            // Set canvas height
+            Canvas_4.height = viewport_4.height;
+
+            __CANVAS_CTX_4 = Canvas_4.getContext('2d');
+
+            var renderContext_4 = {
+                canvasContext: __CANVAS_CTX_4,
+                viewport: viewport_4
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_4).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+        __PDF_DOC.getPage(page_5).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_5 = Canvas_5.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_5 = page.getViewport(scale_required_5);
+
+
+            // Set canvas height
+            Canvas_5.height = viewport_5.height;
+
+            __CANVAS_CTX_5 = Canvas_5.getContext('2d');
+
+            var renderContext_5 = {
+                canvasContext: __CANVAS_CTX_5,
+                viewport: viewport_5
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_5).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+
+
+            __PDF_DOC.getPage(page_6).then(function (page) {
+                // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+                var scale_required_6 = Canvas_6.width / page.getViewport(1).width;
+
+                // Get viewport of the page at required scale
+
+                var viewport_6 = page.getViewport(scale_required_6);
+
+
+                // Set canvas height
+                Canvas_6.height = viewport_6.height;
+
+                __CANVAS_CTX_6 = Canvas_6.getContext('2d');
+
+                var renderContext_6 = {
+                    canvasContext: __CANVAS_CTX_6,
+                    viewport: viewport_6
+                };
+
+                // Render the page contents in the canvas
+
+                page.render(renderContext_6).then(function () {
+                    __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                    // Re-enable Prev & Next buttons
+                    $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                    // Show the canvas and hide the page loader
+                    $("#output_image").show();
+                    $("#page-loader").hide();
+                });
+            });
+
+
+        });
+
+
+    }
+
+
+    function showNine_Page(page_1, page_2, page_3, page_4, page_5, page_6, page_7, page_8, page_9, Canvas_1, Canvas_2, Canvas_3, Canvas_4, Canvas_5, Canvas_6, Canvas_7, Canvas_8, Canvas_9) {
+        console.log("print nine pages");
+
+        __PAGE_RENDERING_IN_PROGRESS = 1;
+        __PAGE_1 = page_1;
+        __PAGE_2 = page_2;
+        __PAGE_3 = page_3;
+        __PAGE_4 = page_4;
+        __PAGE_5 = page_5;
+        __PAGE_6 = page_6;
+        __PAGE_7 = page_7;
+        __PAGE_8 = page_8;
+        __PAGE_9 = page_9;
+
+        __CURRENT_PAGE = page_1;
+
+        // Disable Prev & Next buttons while page is being loaded
+        $("#pdf-next, #pdf-prev").attr('disabled', 'disabled');
+
+        // While page is being rendered hide the canvas and show a loading message
+        $("#output_image").hide();
+        $("#page-loader").show();
+
+        // Update current page in HTML
+        $("#pdf-current-page").text(page_1);
+
+
+        // Fetch the page
+        __PDF_DOC.getPage(page_1).then(function (page1) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_1 = Canvas_1.width / page1.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_1 = page1.getViewport(scale_required_1);
+
+
+            // Set canvas height
+            Canvas_1.height = viewport_1.height;
+
+            __CANVAS_CTX_1 = Canvas_1.getContext('2d');
+
+            var renderContext_1 = {
+                canvasContext: __CANVAS_CTX_1,
+                viewport: viewport_1
+            };
+
+            // Render the page contents in the canvas
+
+            page1.render(renderContext_1).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+
+        __PDF_DOC.getPage(page_2).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_2 = Canvas_2.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_2 = page.getViewport(scale_required_2);
+
+
+            // Set canvas height
+            Canvas_2.height = viewport_2.height;
+
+            __CANVAS_CTX_2 = Canvas_2.getContext('2d');
+
+            var renderContext_2 = {
+                canvasContext: __CANVAS_CTX_2,
+                viewport: viewport_2
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_2).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+
+        });
+
+        __PDF_DOC.getPage(page_3).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_3 = Canvas_3.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_3 = page.getViewport(scale_required_3);
+
+
+            // Set canvas height
+            Canvas_3.height = viewport_3.height;
+
+            __CANVAS_CTX_3 = Canvas_3.getContext('2d');
+
+            var renderContext_3 = {
+                canvasContext: __CANVAS_CTX_3,
+                viewport: viewport_3
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_3).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+        __PDF_DOC.getPage(page_4).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_4 = Canvas_4.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_4 = page.getViewport(scale_required_4);
+
+
+            // Set canvas height
+            Canvas_4.height = viewport_4.height;
+
+            __CANVAS_CTX_4 = Canvas_4.getContext('2d');
+
+            var renderContext_4 = {
+                canvasContext: __CANVAS_CTX_4,
+                viewport: viewport_4
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_4).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+        __PDF_DOC.getPage(page_5).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_5 = Canvas_5.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_5 = page.getViewport(scale_required_5);
+
+
+            // Set canvas height
+            Canvas_5.height = viewport_5.height;
+
+            __CANVAS_CTX_5 = Canvas_5.getContext('2d');
+
+            var renderContext_5 = {
+                canvasContext: __CANVAS_CTX_5,
+                viewport: viewport_5
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_5).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+
+        __PDF_DOC.getPage(page_6).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_6 = Canvas_6.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_6 = page.getViewport(scale_required_6);
+
+
+            // Set canvas height
+            Canvas_6.height = viewport_6.height;
+
+            __CANVAS_CTX_6 = Canvas_6.getContext('2d');
+
+            var renderContext_6 = {
+                canvasContext: __CANVAS_CTX_6,
+                viewport: viewport_6
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_6).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+
+        __PDF_DOC.getPage(page_7).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_7 = Canvas_7.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_7 = page.getViewport(scale_required_7);
+
+
+            // Set canvas height
+            Canvas_7.height = viewport_7.height;
+
+            __CANVAS_CTX_7 = Canvas_7.getContext('2d');
+
+            var renderContext_7 = {
+                canvasContext: __CANVAS_CTX_7,
+                viewport: viewport_7
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_7).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+        __PDF_DOC.getPage(page_8).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_8 = Canvas_8.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_8 = page.getViewport(scale_required_8);
+
+
+            // Set canvas height
+            Canvas_8.height = viewport_8.height;
+
+            __CANVAS_CTX_8 = Canvas_8.getContext('2d');
+
+            var renderContext_8 = {
+                canvasContext: __CANVAS_CTX_8,
+                viewport: viewport_8
+            };
+
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_8).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+
+        });
+
+        __PDF_DOC.getPage(page_9).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_9 = Canvas_9.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_9 = page.getViewport(scale_required_9);
+
+            // Set canvas height
+            Canvas_9.height = viewport_9.height;
+
+            __CANVAS_CTX_9 = Canvas_9.getContext('2d');
+
+            var renderContext_9 = {
+                canvasContext: __CANVAS_CTX_9,
+                viewport: viewport_9
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_9).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+
+    }
+
+
+    // Upon click this should should trigger click on the #file-to-upload file input element
+    // This is better than showing the not-good-looking file input element
+    $("#upload-button").on('click', function () {
+        $("#file-to-upload").trigger('click');
+    });
+
+    var url;
+
+    // When user chooses a PDF file
+    $("#file-to-upload").on('change', function () {
+        // Validate whether PDF
+        if (['application/pdf'].indexOf($("#file-to-upload").get(0).files[0].type) == -1) {
+            alert('Error : Not a PDF');
+            return;
+        }
+
+        url = URL.createObjectURL($("#file-to-upload").get(0).files[0]);
+
+        // Send the object url of the pdf
+        showPDF(url);
+    });
+
+    // Previous page of the PDF
+    $("#pdf-prev").on('click', function () {
+        if (__CURRENT_PAGE != 1)
+            showPage(--__CURRENT_PAGE);
+    });
+
+    // Next page of the PDFg
+    $("#pdf-next").on('click', function () {
+        if (__CURRENT_PAGE != __TOTAL_PAGES)
+            showPage(++__CURRENT_PAGE);
+    });
+
+    function changePagePerSheet() {
+
+        if ($('#orientation').val() === 'portrait' && $('input[name=pages_per_sheet]:checked').val() === '1_per_page_pl') {
+            $('#preview_div').append(__OUTPUT_IMAGE);
+
+            $('#canvas_1').remove();
+            $('#canvas_2').remove();
+            $('#canvas_3').remove();
+            $('#canvas_4').remove();
+            $('#canvas_5').remove();
+            $('#canvas_6').remove();
+            $('#canvas_7').remove();
+            $('#canvas_8').remove();
+            $('#canvas_9').remove();
+
+            show_preview_buttons();
+        }
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=pages_per_sheet]:checked').val() === '4_per_page_pl') {
+            $('#output_image').remove();
+
+            $('#preview_div').append(__CANVAS_1);
+            $('#preview_div').append(__CANVAS_2);
+            $('#preview_div').append(__CANVAS_3);
+            $('#preview_div').append(__CANVAS_4);
+
+            $('#canvas_5').remove();
+            $('#canvas_6').remove();
+            $('#canvas_7').remove();
+            $('#canvas_8').remove();
+            $('#canvas_9').remove();
+
+            __CANVAS_1.width = 135;
+            __CANVAS_1.height = 180;
+
+            __CANVAS_2.width = 135;
+            __CANVAS_2.height = 180;
+
+            __CANVAS_3.width = 135;
+            __CANVAS_3.height = 180;
+
+            __CANVAS_4.width = 135;
+            __CANVAS_4.height = 180;
+
+            $('#canvas_1').removeClass("boder");
+            $('#canvas_2').removeClass("boder");
+            $('#canvas_3').removeClass("boder");
+            $('#canvas_4').removeClass("boder");
+            $('#canvas_5').removeClass("boder");
+            $('#canvas_6').removeClass("boder");
+
+            hidden_preview_buttons();
+            showFour_Page(1, 2, 3, 4, __CANVAS_1, __CANVAS_2, __CANVAS_3, __CANVAS_4);
+
+        }
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=pages_per_sheet]:checked').val() === '6_per_page_pl') {
+            $('#output_image').remove();
+
+            $('#preview_div').append(__CANVAS_1);
+            $('#preview_div').append(__CANVAS_2);
+            $('#preview_div').append(__CANVAS_3);
+            $('#preview_div').append(__CANVAS_4);
+            $('#preview_div').append(__CANVAS_5);
+            $('#preview_div').append(__CANVAS_6);
+
+            $('#canvas_7').remove();
+            $('#canvas_8').remove();
+            $('#canvas_9').remove();
+
+            __CANVAS_1.width = 93;
+            __CANVAS_1.height = 70;
+
+            __CANVAS_2.width = 93;
+            __CANVAS_2.height = 70;
+
+            __CANVAS_3.width = 93;
+            __CANVAS_3.height = 70;
+
+            __CANVAS_4.width = 93;
+            __CANVAS_4.height = 70;
+
+            __CANVAS_5.width = 90;
+            __CANVAS_5.height = 80;
+
+            __CANVAS_6.width = 90;
+            __CANVAS_6.height = 70;
+
+            $('#canvas_1').addClass("boder");
+            $('#canvas_2').addClass("boder");
+            $('#canvas_3').addClass("boder");
+            $('#canvas_4').addClass("boder");
+            $('#canvas_5').addClass("boder");
+            $('#canvas_6').addClass("boder");
+
+            hidden_preview_buttons();
+            showSix_Page(1, 2, 3, 4, 5, 6, __CANVAS_1, __CANVAS_2, __CANVAS_3, __CANVAS_4, __CANVAS_5, __CANVAS_6);
+
+        }
+
+        else if ($('#orientation').val() === 'portrait' && $('input[name=pages_per_sheet]:checked').val() === '9_per_page_pl') {
+            $('#output_image').remove();
+
+            $('#preview_div').append(__CANVAS_1);
+            $('#preview_div').append(__CANVAS_2);
+            $('#preview_div').append(__CANVAS_3);
+            $('#preview_div').append(__CANVAS_4);
+            $('#preview_div').append(__CANVAS_5);
+            $('#preview_div').append(__CANVAS_6);
+            $('#preview_div').append(__CANVAS_7);
+            $('#preview_div').append(__CANVAS_8);
+            $('#preview_div').append(__CANVAS_9);
+
+            __CANVAS_1.width = 92;
+            __CANVAS_1.height = 80;
+
+            __CANVAS_2.width = 92;
+            __CANVAS_2.height = 80;
+
+            __CANVAS_3.width = 92;
+            __CANVAS_3.height = 80;
+
+            __CANVAS_4.width = 92;
+            __CANVAS_4.height = 80;
+
+            __CANVAS_5.width = 92;
+            __CANVAS_5.height = 80;
+
+            __CANVAS_6.width = 92;
+            __CANVAS_6.height = 80;
+
+            __CANVAS_7.width = 92;
+            __CANVAS_7.height = 80;
+
+            __CANVAS_8.width = 92;
+            __CANVAS_8.height = 80;
+
+            __CANVAS_9.width = 92;
+            __CANVAS_9.height = 0;
+
+            $('#canvas_1').removeClass("boder");
+            $('#canvas_2').removeClass("boder");
+            $('#canvas_3').removeClass("boder");
+            $('#canvas_4').removeClass("boder");
+            $('#canvas_5').removeClass("boder");
+            $('#canvas_6').removeClass("boder");
+
+            hidden_preview_buttons();
+            showNine_Page(1, 2, 3, 4, 5, 6, 7, 8, 9, __CANVAS_1, __CANVAS_2, __CANVAS_3, __CANVAS_4, __CANVAS_5, __CANVAS_6, __CANVAS_7, __CANVAS_8, __CANVAS_9);
+        }
+    }
+
+    function hidden_preview_buttons() {
+        $('#pdf-buttons').remove();
+        $('#page-count-container').remove();
+    }
+
+    function show_preview_buttons() {
+        $('#pdf-meta').append(button);
+        $('#pdf-meta').append(page_no);
+    }
+
+</script>
+</html>
