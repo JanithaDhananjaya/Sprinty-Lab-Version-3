@@ -131,12 +131,14 @@
 
     </style>
 
-    <style id="fit_sizes">
+    <style id="fit_sizes for portrait doc">
 
         /*fit sizes stylies*/
 
         .center_div {
-            margin: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /*portrait div*/
@@ -168,11 +170,6 @@
             height: 250px;
             margin-left: 55px
         }
-
-        .fit_landscape {
-            margin-left: 25%;
-        }
-
     </style>
 
     <style id="colour_mode">
@@ -181,7 +178,7 @@
         }
     </style>
 
-    <style id="actual_sizes">
+    <style id="actual_sizes for portrait doc">
 
         .overflow {
             overflow: hidden;
@@ -252,8 +249,33 @@
         }
 
         .boder {
-            margin-left: 20px;
-            margin-right: 20px;
+            margin-left: 5px;
+            /*margin-right: 20px;*/
+        }
+
+        .top_margin{
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .rotate {
+            transform: rotate(90deg);
+        }
+
+        .landscape_margins_2_per_page {
+            margin-bottom: auto;
+            margin-top: 60px;
+            margin-left: 30px;
+        }
+
+    </style>
+
+    <!--landscape doc-->
+    <style>
+        .landscape_image {
+            position: relative;
+            width: 385px;
+            height: 235px;
         }
 
     </style>
@@ -293,7 +315,7 @@
 
                 <div>
                     <button id="upload-button">Select PDF</button>
-                    <input type="file" id="file-to-upload" onclick="change_options()" accept="application/pdf"/>
+                    <input type="file" id="file-to-upload" accept="application/pdf"/>
                 </div>
 
             </li>
@@ -529,7 +551,9 @@
 
     </ul>
 </div>
+
 </body>
+
 <script>
 
     var fileUpload = true;
@@ -555,13 +579,44 @@
     }
 
 </script>
+
 <script>
 
 
     var uploadFile = false;
+    var portrait_doc = false;
+    var landscape_doc = false;
+
+    function reset_preview() {
+        console.log("call reset_preview function");
+        $('#output_image').css("width", 0);
+        $('#output_image').css("height", 0);
+    }
+
+    //Choose the default layout of the document
+    function notice_layout() {
+        check_default_page_layput();
+    }
+
+    function check_default_page_layput() {
+
+        var width = $('#output_image').width();
+        console.log("width  :" + width);
+
+        var height = $('#output_image').height();
+        console.log("height  :" + height);
+
+        if (width < height) {
+            portrait_doc = true;
+            change_options();
+        } else {
+            $('#orientation').val("landscape");
+            landscape();
+        }
+    }
 
     $('#orientation').change(function () {
-        change_options();
+        check_default_page_layput();
     });
 
     $('#page_sizes').change(function () {
@@ -623,6 +678,7 @@
         else if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'fit') {
             $('#preview_div').addClass("landscape");
             $('#output_image').addClass("image_landscape");
+            $('#output_image').addClass("center_div");
 
             $('#preview_div').removeClass("portrait");
             $('#preview_div').removeClass("overflow");
@@ -640,7 +696,6 @@
             $('#output_image').removeClass("B5_landscape");
             $('#output_image').removeClass("letter_portrait");
             $('#output_image').removeClass("letter_landscape");
-
         }
 
         // page preview for actualsize portrait A3 paper
@@ -945,6 +1000,20 @@
         }
     }
 
+    function landscape() {
+
+        if (uploadFile) {
+            set_default_options();
+        }
+        changePagePerSheet();
+        uploadFile = true;
+
+        if ($('#orientation').val() === 'landscape' && $('input[name=page_handing]:checked').val() === 'fit') {
+            $('#preview_div').addClass("landscape");
+            $('#output_image').addClass("landscape_image");
+        }
+    }
+
 </script>
 <script>
     $('#greyScale').click(function () {
@@ -1014,6 +1083,7 @@
 
             // Show the first page
             showPage(1);
+
         }).catch(function (error) {
             // If error re-show the upload button
             $("#pdf-loader").hide();
@@ -1067,11 +1137,13 @@
 
                 // Show the canvas and hide the page loader
                 $("#output_image").show();
+
+                notice_layout();
+
                 $("#page-loader").hide();
             });
         });
     }
-
 
     function showFour_Page(page_1, page_2, page_3, page_4, Canvas_1, Canvas_2, Canvas_3, Canvas_4) {
         console.log("print four pages");
@@ -1461,7 +1533,6 @@
 
         });
 
-
     }
 
 
@@ -1794,8 +1865,97 @@
                 $("#page-loader").hide();
             });
         });
+    }
 
 
+    function showTwo_Page(page_1, page_2, Canvas_1, Canvas_2) {
+        console.log("print two pages");
+
+        __PAGE_RENDERING_IN_PROGRESS = 1;
+        __PAGE_1 = page_1;
+        __PAGE_2 = page_2;
+
+        __CURRENT_PAGE = page_1;
+
+        // Disable Prev & Next buttons while page is being loaded
+        $("#pdf-next, #pdf-prev").attr('disabled', 'disabled');
+
+        // While page is being rendered hide the canvas and show a loading message
+        $("#output_image").hide();
+        $("#page-loader").show();
+
+        // Update current page in HTML
+        $("#pdf-current-page").text(page_1);
+
+
+        // Fetch the pagebuttons
+        __PDF_DOC.getPage(page_1).then(function (page1) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_1 = Canvas_1.width / page1.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_1 = page1.getViewport(scale_required_1);
+
+
+            // Set canvas height
+            Canvas_1.height = viewport_1.height;
+
+            __CANVAS_CTX_1 = Canvas_1.getContext('2d');
+
+            var renderContext_1 = {
+                canvasContext: __CANVAS_CTX_1,
+                viewport: viewport_1
+            };
+
+            // Render the page contents in the canvas
+
+            page1.render(renderContext_1).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+        });
+
+
+        __PDF_DOC.getPage(page_2).then(function (page) {
+            // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
+            var scale_required_2 = Canvas_2.width / page.getViewport(1).width;
+
+            // Get viewport of the page at required scale
+
+            var viewport_2 = page.getViewport(scale_required_2);
+
+
+            // Set canvas height
+            Canvas_2.height = viewport_2.height;
+
+            __CANVAS_CTX_2 = Canvas_2.getContext('2d');
+
+            var renderContext_2 = {
+                canvasContext: __CANVAS_CTX_2,
+                viewport: viewport_2
+            };
+
+            // Render the page contents in the canvas
+
+            page.render(renderContext_2).then(function () {
+                __PAGE_RENDERING_IN_PROGRESS = 0;
+
+                // Re-enable Prev & Next buttons
+                $("#pdf-next, #pdf-prev").removeAttr('disabled');
+
+                // Show the canvas and hide the page loader
+                $("#output_image").show();
+                $("#page-loader").hide();
+            });
+
+        });
     }
 
 
@@ -1835,7 +1995,8 @@
 
     function changePagePerSheet() {
 
-        if ($('#orientation').val() === 'portrait' && $('input[name=pages_per_sheet]:checked').val() === '1_per_page_pl') {
+        //for portrait pre sets
+        if ($('input[name=pages_per_sheet]:checked').val() === '1_per_page_pl') {
             $('#preview_div').append(__OUTPUT_IMAGE);
 
             $('#canvas_1').remove();
@@ -1983,6 +2144,245 @@
             hidden_preview_buttons();
             showNine_Page(1, 2, 3, 4, 5, 6, 7, 8, 9, __CANVAS_1, __CANVAS_2, __CANVAS_3, __CANVAS_4, __CANVAS_5, __CANVAS_6, __CANVAS_7, __CANVAS_8, __CANVAS_9);
         }
+
+        //for landscape pre sets
+
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=pages_per_sheet]:checked').val() === '1_per_page_pl') {
+            $('#preview_div').append(__OUTPUT_IMAGE);
+
+            $('#canvas_1').remove();
+            $('#canvas_2').remove();
+            $('#canvas_3').remove();
+            $('#canvas_4').remove();
+            $('#canvas_5').remove();
+            $('#canvas_6').remove();
+            $('#canvas_7').remove();
+            $('#canvas_8').remove();
+            $('#canvas_9').remove();
+
+            change_options();
+            show_preview_buttons();
+
+        }
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=pages_per_sheet]:checked').val() === '2_per_page_pl') {
+            $('#output_image').remove();
+
+            $('#canvas_3').remove();
+            $('#canvas_4').remove();
+            $('#canvas_5').remove();
+            $('#canvas_6').remove();
+            $('#canvas_7').remove();
+            $('#canvas_8').remove();
+            $('#canvas_9').remove();
+
+            $('#preview_div').append(__CANVAS_1);
+            $('#preview_div').append(__CANVAS_2);
+
+            __CANVAS_1.width = 160;
+             __CANVAS_1.height = 100;
+
+            __CANVAS_2.width = 160;
+             __CANVAS_2.height = 100;
+
+
+            $('#canvas_3').removeClass("boder");
+            $('#canvas_4').removeClass("boder");
+            $('#canvas_5').removeClass("boder");
+            $('#canvas_6').removeClass("boder");
+
+            // $('#canvas_1').addClass("boder");
+            // $('#canvas_2').addClass("boder");
+
+            $('#canvas_1').addClass("landscape_margins_2_per_page");
+            $('#canvas_2').addClass("landscape_margins_2_per_page");
+
+            hidden_preview_buttons();
+            showTwo_Page(1, 2, __CANVAS_1, __CANVAS_2);
+        }
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=pages_per_sheet]:checked').val() === '4_per_page_pl') {
+            $('#output_image').remove();
+
+            $('#canvas_5').remove();
+            $('#canvas_6').remove();
+            $('#canvas_7').remove();
+            $('#canvas_8').remove();
+            $('#canvas_9').remove();
+
+            $('#preview_div').append(__CANVAS_1);
+            $('#preview_div').append(__CANVAS_2);
+            $('#preview_div').append(__CANVAS_3);
+            $('#preview_div').append(__CANVAS_4);
+
+            __CANVAS_1.width = 175;
+            __CANVAS_1.height = 100;
+
+            __CANVAS_2.width = 175;
+            __CANVAS_2.height = 100;
+
+            __CANVAS_3.width = 170;
+            __CANVAS_3.height = 100;
+
+            __CANVAS_4.width = 170;
+            __CANVAS_4.height = 100;
+
+            $('#canvas_5').removeClass("boder");
+            $('#canvas_6').removeClass("boder");
+            $('#canvas_7').removeClass("boder");
+            $('#canvas_8').removeClass("boder");
+            $('#canvas_9').removeClass("boder");
+
+            $('#canvas_1').addClass("boder");
+            $('#canvas_2').addClass("boder");
+            $('#canvas_3').addClass("boder");
+            $('#canvas_4').addClass("boder");
+
+            $('#canvas_1').removeClass("landscape_margins_2_per_page");
+            $('#canvas_2').removeClass("landscape_margins_2_per_page");
+            $('#canvas_3').removeClass("landscape_margins_2_per_page");
+            $('#canvas_4').removeClass("landscape_margins_2_per_page");
+
+            $('#canvas_1').removeClass("top_margin");
+            $('#canvas_2').removeClass("top_margin");
+            $('#canvas_3').removeClass("top_margin");
+            $('#canvas_4').removeClass("top_margin");
+
+            hidden_preview_buttons();
+            showFour_Page(1, 2,3,4, __CANVAS_1, __CANVAS_2,__CANVAS_3,__CANVAS_4);
+
+
+        }else if ($('#orientation').val() === 'landscape' && $('input[name=pages_per_sheet]:checked').val() === '6_per_page_pl') {
+            $('#output_image').remove();
+
+            $('#canvas_7').remove();
+            $('#canvas_8').remove();
+            $('#canvas_9').remove();
+
+            $('#preview_div').append(__CANVAS_1);
+            $('#preview_div').append(__CANVAS_2);
+            $('#preview_div').append(__CANVAS_3);
+            $('#preview_div').append(__CANVAS_4);
+            $('#preview_div').append(__CANVAS_5);
+            $('#preview_div').append(__CANVAS_6);
+
+            __CANVAS_1.width = 120;
+            __CANVAS_1.height = 100;
+
+            __CANVAS_2.width = 120;
+            __CANVAS_2.height = 100;
+
+            __CANVAS_3.width = 120;
+            __CANVAS_3.height = 100;
+
+            __CANVAS_4.width = 120;
+            __CANVAS_4.height = 100;
+
+            __CANVAS_5.width = 120;
+            __CANVAS_5.height = 100;
+
+            __CANVAS_6.width = 120;
+            __CANVAS_6.height = 100;
+
+            $('#canvas_1').removeClass("boder");
+            $('#canvas_2').removeClass("boder");
+            $('#canvas_3').removeClass("boder");
+            $('#canvas_4').removeClass("boder");
+            $('#canvas_5').removeClass("boder");
+            $('#canvas_6').removeClass("boder");
+            $('#canvas_7').removeClass("boder");
+            $('#canvas_8').removeClass("boder");
+            $('#canvas_9').removeClass("boder");
+
+            $('#canvas_1').addClass("boder");
+            $('#canvas_2').addClass("boder");
+            $('#canvas_3').addClass("boder");
+            $('#canvas_4').addClass("boder");
+
+            $('#canvas_1').removeClass("landscape_margins_2_per_page");
+            $('#canvas_2').removeClass("landscape_margins_2_per_page");
+            $('#canvas_3').removeClass("landscape_margins_2_per_page");
+            $('#canvas_4').removeClass("landscape_margins_2_per_page");
+
+            $('#canvas_1').addClass("top_margin");
+            $('#canvas_2').addClass("top_margin");
+            $('#canvas_3').addClass("top_margin");
+            $('#canvas_4').addClass("top_margin");
+            $('#canvas_5').addClass("top_margin");
+            $('#canvas_6').addClass("top_margin");
+
+
+            hidden_preview_buttons();
+            showSix_Page(1, 2,3,4,5,6, __CANVAS_1, __CANVAS_2,__CANVAS_3,__CANVAS_4,__CANVAS_5,__CANVAS_6);
+        }
+
+        else if ($('#orientation').val() === 'landscape' && $('input[name=pages_per_sheet]:checked').val() === '9_per_page_pl') {
+            $('#output_image').remove();
+
+            $('#preview_div').append(__CANVAS_1);
+            $('#preview_div').append(__CANVAS_2);
+            $('#preview_div').append(__CANVAS_3);
+            $('#preview_div').append(__CANVAS_4);
+            $('#preview_div').append(__CANVAS_5);
+            $('#preview_div').append(__CANVAS_6);
+            $('#preview_div').append(__CANVAS_7);
+            $('#preview_div').append(__CANVAS_8);
+            $('#preview_div').append(__CANVAS_9);
+
+            __CANVAS_1.width = 115;
+            __CANVAS_1.height = 80;
+
+            __CANVAS_2.width = 115;
+            __CANVAS_2.height = 80;
+
+            __CANVAS_3.width = 115;
+            __CANVAS_3.height = 80;
+
+            __CANVAS_4.width = 110;
+            __CANVAS_4.height = 80;
+
+            __CANVAS_5.width = 110;
+            __CANVAS_5.height = 80;
+
+            __CANVAS_6.width = 110;
+            __CANVAS_6.height = 80;
+
+            __CANVAS_7.width = 115;
+            __CANVAS_7.height = 80;
+
+            __CANVAS_8.width = 115;
+            __CANVAS_8.height = 80;
+
+            __CANVAS_9.width = 115;
+            __CANVAS_9.height = 0;
+
+            $('#canvas_1').addClass("boder");
+            $('#canvas_2').addClass("boder");
+            $('#canvas_3').addClass("boder");
+            $('#canvas_4').addClass("boder");
+            $('#canvas_5').addClass("boder");
+            $('#canvas_6').addClass("boder");
+            $('#canvas_7').addClass("boder");
+            $('#canvas_8').addClass("boder");
+            $('#canvas_9').addClass("boder");
+
+            $('#canvas_1').removeClass("landscape_margins_2_per_page");
+            $('#canvas_2').removeClass("landscape_margins_2_per_page");
+            $('#canvas_3').removeClass("landscape_margins_2_per_page");
+            $('#canvas_4').removeClass("landscape_margins_2_per_page");
+
+            $('#canvas_1').removeClass("top_margin");
+            $('#canvas_2').removeClass("top_margin");
+            $('#canvas_3').removeClass("top_margin");
+            $('#canvas_4').removeClass("top_margin");
+            $('#canvas_5').removeClass("top_margin");
+            $('#canvas_6').removeClass("top_margin");
+
+            hidden_preview_buttons();
+            showNine_Page(1, 2, 3, 4, 5, 6, 7, 8, 9, __CANVAS_1, __CANVAS_2, __CANVAS_3, __CANVAS_4, __CANVAS_5, __CANVAS_6, __CANVAS_7, __CANVAS_8, __CANVAS_9);
+        }
+
     }
 
     function hidden_preview_buttons() {
